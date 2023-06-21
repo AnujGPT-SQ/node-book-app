@@ -1,5 +1,5 @@
 const bookModel = require("../model/bookModel.js");
-
+const { ObjectId } = require("mongoose").Types;
 const createBook = async function (req, res) {
   try {
     const {
@@ -53,7 +53,13 @@ const getAllBooks = async function (req, res) {
 
 const getBookById = async function (req, res) {
   try {
-    const bookData = await bookModel.findById(req.params.id);
+    const { id } = req.params;
+    console.log("id", id);
+    const bookData = await bookModel.findById({
+      _id: new ObjectId(id),
+    });
+
+    console.log("bookData", bookData);
     res.status(200).send({
       message: "book fetched successfully",
       status: true,
@@ -65,11 +71,40 @@ const getBookById = async function (req, res) {
 };
 
 const updateBook = async function (req, res) {
-  console.log("update req body : ", req.body);
   try {
+    const { id } = req.params;
+    checkBook = await bookModel.findOne({ _id: new ObjectId(id) });
+    if (!checkBook) {
+      return res.status(404).send({ message: "book not found" });
+    }
+
+    const {
+      bookId,
+      bookName,
+      bookTitle,
+      bookAuthorName,
+      bookPrice,
+      bookDescription,
+      bookCategory,
+      bookPublishedDate,
+      bookStatus,
+      bookImage,
+    } = req.body;
+
     let updatedBook = await bookModel.findOneAndUpdate(
-      { _id: req._id },
-      { $set: req.body },
+      { _id: new ObjectId(id) },
+      {
+        bookId,
+        bookName,
+        bookTitle,
+        bookAuthorName,
+        bookPrice,
+        bookDescription,
+        bookCategory,
+        bookPublishedDate,
+        bookStatus,
+        bookImage,
+      },
       { new: true }
     );
     res.status(200).send({
@@ -86,7 +121,10 @@ const updateBook = async function (req, res) {
 };
 const deleteBook = async function (req, res) {
   try {
-    const bookData = await bookModel.findByIdAndDelete(req.params.id);
+    const { id } = req.params;
+    const bookData = await bookModel.findByIdAndDelete({
+      _id: new ObjectId(id),
+    });
     res.status(200).send({
       message: "book deleted successfully",
       status: true,
